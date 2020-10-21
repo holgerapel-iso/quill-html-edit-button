@@ -61,12 +61,13 @@ class htmlEditButton {
 }
 
 function launchPopupEditor(quill, options) {
-  const htmlFromEditor = quill.container.querySelector(".ql-editor").innerHTML;
+  const qleditor = quill.container.querySelector(".ql-editor");
+  const htmlFromEditor = qleditor.innerHTML;
   const popupContainer = $create("div");
   const overlayContainer = $create("div");
-  const msg = options.msg || 'Edit HTML here, when you click "OK" the quill editor\'s contents will be replaced';
+  const msg = options.msg || 'Edit HTML here, when you click "Update" the editor\'s contents will be replaced';
   const cancelText = options.cancelText || "Cancel";
-  const okText = options.okText || "Ok";
+  const okText = options.okText || "Update";
 
   $setAttr(overlayContainer, "class", "ql-html-overlayContainer");
   $setAttr(popupContainer, "class", "ql-html-popupContainer");
@@ -86,6 +87,7 @@ function launchPopupEditor(quill, options) {
   $setAttr(buttonCancel, "class", "ql-html-buttonCancel");
   const buttonOk = $create("button");
   buttonOk.innerHTML = okText;
+  $setAttr(buttonOk, "class", "ql-html-buttonOk");
   const buttonGroup = $create("div");
   $setAttr(buttonGroup, "class", "ql-html-buttonGroup");
 
@@ -96,18 +98,33 @@ function launchPopupEditor(quill, options) {
   textContainer.appendChild(buttonGroup);
   popupContainer.appendChild(textContainer);
   overlayContainer.appendChild(popupContainer);
-  document.body.appendChild(overlayContainer);
+  // document.body.appendChild(overlayContainer);
+  
+  overlayContainer.style.width = quill.getModule('toolbar').container.offsetWidth + 'px';
+  htmlEditor.style.height = qleditor.offsetHeight + 'px';
+  
+  quill.container.appendChild(overlayContainer);
+  
+  quill.getModule('toolbar').container.style.display='none';
+  qleditor.style.display='none';
+  
+  
   var editor = new Quill(htmlEditor, {
     modules: { syntax: options.syntax },
   });
 
   buttonCancel.onclick = function() {
-    document.body.removeChild(overlayContainer);
+    // document.body.removeChild(overlayContainer);
+    quill.container.removeChild(overlayContainer);
+  
+    quill.getModule('toolbar').container.style.display='';
+    qleditor.style.display='';
   };
-  overlayContainer.onclick = buttonCancel.onclick;
+  // overlayContainer.onclick = buttonCancel.onclick;
+  
   popupContainer.onclick = function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+     // e.preventDefault();
+     // e.stopPropagation();
   };
   buttonOk.onclick = function() {
     const output = editor.container.querySelector(".ql-editor").innerText;
@@ -120,8 +137,11 @@ function launchPopupEditor(quill, options) {
     .replace(/\s<\//g, "</") // remove spaces before the end of tags
     .replace(/(<[^\/<>]+>)\s(<[^\/<>]+>)/g, "$1$2") // remove space between multiple starting tags
     .trim();
-    quill.container.querySelector(".ql-editor").innerHTML = noNewlines;
-    document.body.removeChild(overlayContainer);
+    qleditor.innerHTML = noNewlines;
+    // document.body.removeChild(overlayContainer);
+    quill.container.removeChild(overlayContainer);
+    quill.getModule('toolbar').container.style.display='';
+    qleditor.style.display='';
   };
 }
 
